@@ -1,6 +1,6 @@
 const fs=require('fs'),vm=require('vm'),assert=require('assert');
 const FAKE='xoxp-SYNTHETIC-NOT-A-REAL-TOKEN-000000';
-const raw=fs.readFileSync(__dirname+'/dot_notify_user_signal.js','utf8');
+const raw=fs.readFileSync(__dirname+'/dot_notify_user_signal_dev6.js','utf8');
 function run({mode='retry',pending='',configured=true,response=JSON.stringify({ok:true,channel:'CHANNEL_ID_REPLACE_BEFORE_USE',ts:'1000000000.123456'}),http=200,event='load',throwSend=false,newer=false,blocked=false,secretDir='/data/user/0/net.dinglisch.android.taskerm/no_backup',setupEntry='xoxp-SYNTHETIC-NOT-A-REAL-TOKEN-000000',omitPar1=false}={}){
  const g={DotUserNotifyPending:pending,DotUserNotifyBlocked:blocked?'1':''},sent=[],writes=[];let exits=0;
  class X {open(m,u,a){assert.equal(m,'POST');assert.equal(a,true);assert.equal(u,'https://slack.com/api/chat.postMessage');}setRequestHeader(k,v){if(k==='Content-Type')assert.equal(v,'application/json; charset=utf-8');else {assert.equal(k,'Authorization');assert.equal(v,'Bearer '+FAKE);}}send(body){if(throwSend)throw Error('redacted');sent.push(JSON.parse(body));this.status=http;this.responseText=response;if(newer)g.DotUserNotifyPending='newerbatch-123';this['on'+event]();}}

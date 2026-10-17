@@ -1,40 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
-<TaskerData sr="" dvi="1" tv="6.6.20">
-  <Task sr="task903">
-    <id>903</id>
-    <nme>dot 사용자 알림 신호 v0.1.0-dev5</nme>
-    <pri>6</pri>
-    <Action sr="act0" ve="7">
-      <code>664</code>
-      <se>false</se>
-      <Str sr="arg0" ve="3">dotnotifydir</Str>
-      <Str sr="arg1" ve="3">CONTEXT</Str>
-      <Str sr="arg2" ve="3">getNoBackupFilesDir {File} ()</Str>
-      <Str sr="arg3" ve="3" />
-      <Str sr="arg4" ve="3" />
-      <Str sr="arg5" ve="3" />
-      <Str sr="arg6" ve="3" />
-      <Str sr="arg7" ve="3" />
-      <Str sr="arg8" ve="3" />
-      <Str sr="arg9" ve="3" />
-    </Action>
-    <Action sr="act1" ve="7">
-      <code>664</code>
-      <se>false</se>
-      <Str sr="arg0" ve="3">%secret_dir</Str>
-      <Str sr="arg1" ve="3">dotnotifydir</Str>
-      <Str sr="arg2" ve="3">getAbsolutePath {String} ()</Str>
-      <Str sr="arg3" ve="3" />
-      <Str sr="arg4" ve="3" />
-      <Str sr="arg5" ve="3" />
-      <Str sr="arg6" ve="3" />
-      <Str sr="arg7" ve="3" />
-      <Str sr="arg8" ve="3" />
-      <Str sr="arg9" ve="3" />
-    </Action>
-    <Action sr="act2" ve="7">
-      <code>129</code>
-      <Str sr="arg0" ve="3">/* dot notification signal v0.1.0-dev5. Tasker JavaScriptlet: Auto Exit OFF, timeout 20s.
+/* dot notification signal v0.1.0-dev6. Tasker JavaScriptlet: Auto Exit OFF, timeout 20s.
  * Secret is entered at runtime and stored in the app-private no_backup directory.
  * Java Function actions supply secret_dir from CONTEXT.getNoBackupFilesDir().
  */
@@ -42,12 +6,25 @@
   var token = "";
   var secretDir = String(typeof secret_dir === "undefined" ? "" : secret_dir);
   var validToken = /^xoxp-[A-Za-z0-9-]{20,250}$/;
-  // Manual play is a single connection-test signal; scheduled calls pass retry/enqueue explicitly.
-  var mode = String(typeof par1 === "undefined" ? "" : par1);
-  if (!mode || mode === "%par1") mode = "enqueue";
+  // Tasker may expose numbered parameters as scalar par1 or zero-based array par.
+  // Manual play with neither parameter remains a one-shot signal.
+  function modeValue(value) {
+    if (typeof value === "undefined") return "";
+    var text = String(value);
+    return text === String.fromCharCode(37) + "par1" ? "" : text;
+  }
+  if (typeof par !== "undefined" && !Array.isArray(par)) {
+    setGlobal("DotUserNotifyStatus", "invalid_mode"); exit(); return;
+  }
+  var scalarMode = modeValue(typeof par1 === "undefined" ? undefined : par1);
+  var arrayMode = modeValue(typeof par === "undefined" ? undefined : par[0]);
+  if (scalarMode && arrayMode && scalarMode !== arrayMode) {
+    setGlobal("DotUserNotifyStatus", "mode_conflict"); exit(); return;
+  }
+  var mode = scalarMode || arrayMode || "enqueue";
   function get(name) { var v = String(global(name) || ""); return v.charAt(0) === "%" ? "" : v; }
   function status(value) { setGlobal("DotUserNotifyStatus", value); }
-  if (mode !== "retry" &amp;&amp; mode !== "enqueue" &amp;&amp; mode !== "setup") { status("invalid_mode"); exit(); return; }
+  if (mode !== "retry" && mode !== "enqueue" && mode !== "setup") { status("invalid_mode"); exit(); return; }
   if (mode === "enqueue") {
     // New uploads can coalesce: receiver always reads ALL unread Drive changes.
     setGlobal("DotUserNotifyPending", Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 14));
@@ -96,12 +73,12 @@
       var result = {};
       try { result = JSON.parse(request.responseText); } catch (_) {}
       if (!result || typeof result !== "object" || Array.isArray(result)) result = {};
-      if (request.status === 200 &amp;&amp; result.ok === true &amp;&amp; result.channel === "CHANNEL_ID_REPLACE_BEFORE_USE" &amp;&amp; /^\d+\.\d+$/.test(String(result.ts || ""))) {
+      if (request.status === 200 && result.ok === true && result.channel === "CHANNEL_ID_REPLACE_BEFORE_USE" && /^\d+\.\d+$/.test(String(result.ts || ""))) {
         // Never erase a newer pending batch if another invocation has replaced it.
         if (get("DotUserNotifyPending") === batch) setGlobal("DotUserNotifyPending", "");
         setGlobal("DotUserNotifyLastAck", batch);
         finish("slack_accepted");
-      } else if (["invalid_auth", "token_revoked", "token_expired", "account_inactive", "missing_scope", "not_allowed_token_type", "channel_not_found", "not_in_channel", "is_archived", "no_permission", "restricted_action"].indexOf(result.error) &gt;= 0 || request.status &gt;= 400 &amp;&amp; request.status &lt; 500 &amp;&amp; request.status !== 408 &amp;&amp; request.status !== 429) {
+      } else if (["invalid_auth", "token_revoked", "token_expired", "account_inactive", "missing_scope", "not_allowed_token_type", "channel_not_found", "not_in_channel", "is_archived", "no_permission", "restricted_action"].indexOf(result.error) >= 0 || request.status >= 400 && request.status < 500 && request.status !== 408 && request.status !== 429) {
         setGlobal("DotUserNotifyBlocked", "1");
         finish("settings_required");
       } else finish("retry_pending");
@@ -112,10 +89,3 @@
     request.send(JSON.stringify({channel: "CHANNEL_ID_REPLACE_BEFORE_USE", text: "DOT_NOTIFY_SAVED_V1 batch=" + batch}));
   } catch (_) { finish("retry_pending"); }
 })();
-</Str>
-      <Str sr="arg1" ve="3" />
-      <Int sr="arg2" val="0" />
-      <Int sr="arg3" val="20" />
-    </Action>
-  </Task>
-</TaskerData>

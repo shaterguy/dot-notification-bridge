@@ -1,12 +1,10 @@
-# Tasker notification saved signal template
+# Tasker saved-signal template v0.1.0-dev6
 
-Public, sanitized source template. This is not the installed, verified task artifact. Replace CHANNEL_ID_REPLACE_BEFORE_USE in the JavaScript, XML, and mock tests with your own authorized private channel before importing. Revalidate XML/JS consistency and run the mock tests after configuration. No notification body is sent.
+Sanitized source template, not the configured installed artifact. Replace CHANNEL_ID_REPLACE_BEFORE_USE in JS, XML and tests with your own authorized destination before import. Never commit tokens or notification contents. Setup/private storage is unchanged from dev5; this package does not request token entry.
 
-The setup task asks the owner directly for a Slack User OAuth token with chat:write and writes it to Tasker private no_backup storage. Never paste tokens into source code, exports, GitHub, or chat. The permission itself is broader than a single channel; the implementation fixes the destination and payload. Existing webhook storage is separate.
+The signal helper reads either Tasker scalar par1 or array par[0]. Conflicting nonempty modes and malformed arrays fail closed without changing pending work. Explicit retry with no pending work sends nothing; retry with pending work preserves its batch. Empty manual-play input still enqueues one test signal. This corrects a reproducible array-only input case; no claim is made that this is the confirmed cause on every device.
 
-The sender posts only DOT_NOTIFY_SAVED_V1 plus an opaque batch. No default destination is usable. Setup performs no network request. Direct sender execution enqueues one signal; retry attempts only existing pending work. Permanent authorization errors block retries until setup is repaired. Timeouts can cause duplicate delivery; receiver-side batch deduplication is required. There is no exactly-once or immediate-delivery guarantee.
+The helper task is named dot 사용자 알림 신호 v0.1.0-dev6. Import as a distinct task, then select that name in the two existing Perform Task calls. Keep Parameter 1 retry in the first call and enqueue after confirmed successful upload, and keep existing priority/error settings. Do not change the existing profile or import a whole Tasker backup. Do not assume a same-name import safely replaces tasks.
 
-Run: node test_user_signal.cjs
-The mock suite checks code behavior, not real Android, Slack OAuth, event delivery, or your upload integration. Read UPLOAD-INTEGRATION.ko.md before integrating. Existing upload tasks and profiles are not included or replaced.
-
-Included XML tasks are templates of the helper tasks only. Their task IDs and names may conflict with an existing import; inspect before importing. The original operational files remain separate and unchanged.
+Mock checks: node test_user_signal_dev6.cjs; node test_mode_mapping.cjs
+These tests are not Android or real Slack delivery tests. Notification content is never sent; payload is only a fixed prefix plus opaque batch. Token scope is broader than a channel, but the implementation fixes destination and API. No exactly-once/immediate-delivery guarantee.
